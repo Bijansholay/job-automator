@@ -1,4 +1,4 @@
-# Use official Playwright base image (pre-bundled with Node.js and Linux browser dependencies)
+# Use official Playwright base image (pre-bundled with Node.js, Linux dependencies & Chromium)
 FROM mcr.microsoft.com/playwright:v1.42.1-jammy
 
 # Set working directory
@@ -7,9 +7,6 @@ WORKDIR /app
 # Copy package files and install dependencies
 COPY package*.json ./
 RUN npm ci
-
-# Install Playwright Chromium browser binary
-RUN npx playwright install chromium
 
 # Copy application source code
 COPY . .
@@ -21,6 +18,7 @@ RUN npm run build
 ENV NODE_ENV=production
 ENV PORT=5001
 ENV HEADLESS=true
+ENV NODE_OPTIONS="--max-old-space-size=512"
 
 # Expose HTTP port
 EXPOSE 5001

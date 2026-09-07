@@ -43,6 +43,10 @@ else
   git reset --hard origin/main
 fi
 
+# Free up disk space before Docker build
+echo "Pruning unused Docker build cache & dangling images to free disk space..."
+sudo docker system prune -af --volumes || true
+
 # Build and start container
 echo "Building and launching Docker containers..."
 if command -v docker-compose &> /dev/null; then
