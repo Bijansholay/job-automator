@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bot, AlertOctagon, CheckCircle2, Play, Square, RefreshCw, Smartphone, Monitor } from 'lucide-react';
+import { Bot, AlertOctagon, CheckCircle2, ExternalLink, Play, Square, RefreshCw, Smartphone, Monitor } from 'lucide-react';
 
 export default function AutoFillController({ automationData }) {
   const [status, setStatus] = useState({
@@ -70,6 +70,7 @@ export default function AutoFillController({ automationData }) {
   };
 
   const isCaptcha = status.status === 'CAPTCHA_DETECTED';
+  const liveUrl = status.currentUrl || targetJobUrl;
 
   return (
     <div className="glass-panel">
@@ -92,7 +93,7 @@ export default function AutoFillController({ automationData }) {
                 <span className="badge badge-ruby">ACTION REQUIRED</span>
               </div>
               <p style={{ margin: '8px 0 14px 0', fontSize: '0.92rem', color: '#fecaca' }}>
-                The browser script encountered a CAPTCHA, Cloudflare check, or verification prompt for <strong>{status.jobTitle}</strong>.
+                The automated script encountered a verification check for <strong>{status.jobTitle}</strong>. Open the target application page in a new browser tab to solve it directly.
               </p>
 
               <div style={{
@@ -105,33 +106,54 @@ export default function AutoFillController({ automationData }) {
                 fontSize: '0.85rem'
               }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#6ee7b7' }}>
-                  <Monitor size={16} /> Desktop OS Alert Sent (Mac / Windows)
+                  <Monitor size={16} /> Alert Dispatched
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#93c5fd' }}>
-                  <Smartphone size={16} /> Mobile Push Dispatched (Android / iOS)
+                  <Smartphone size={16} /> Mobile Push Dispatched
                 </span>
               </div>
 
               {status.hasCaptchaImage && (
                 <div style={{ marginBottom: '16px', background: '#000000', padding: '10px', borderRadius: '10px', border: '1px solid rgba(239, 68, 68, 0.4)' }}>
                   <div style={{ fontSize: '0.8rem', color: '#fca5a5', marginBottom: '8px', fontWeight: 600 }}>
-                    📷 Cloud Live Capture (Verification Challenge Screen):
+                    📷 Cloud Live Snapshot (Verification Screen):
                   </div>
                   <img
                     src={`/api/automate/captcha-image?t=${Date.now()}`}
                     alt="CAPTCHA Verification Screen"
-                    style={{ maxWidth: '100%', maxHeight: '350px', borderRadius: '6px', border: '1px solid #374151', objectFit: 'contain' }}
+                    style={{ maxWidth: '100%', maxHeight: '300px', borderRadius: '6px', border: '1px solid #374151', objectFit: 'contain' }}
                   />
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                {liveUrl && (
+                  <a
+                    href={liveUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-primary"
+                    style={{
+                      background: '#3b82f6',
+                      color: '#ffffff',
+                      padding: '10px 20px',
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontWeight: 600
+                    }}
+                  >
+                    <ExternalLink size={18} /> Step 1: Open Job Page in Browser
+                  </a>
+                )}
+
                 <button
                   className="btn btn-primary"
-                  style={{ background: '#10b981', color: '#ffffff', padding: '10px 20px' }}
+                  style={{ background: '#10b981', color: '#ffffff', padding: '10px 20px', fontWeight: 600 }}
                   onClick={handleResolveCaptcha}
                 >
-                  <CheckCircle2 size={18} /> I Completed Verification — Resume Assistant
+                  <CheckCircle2 size={18} /> Step 2: Verification Complete — Resume Assistant
                 </button>
               </div>
             </div>
