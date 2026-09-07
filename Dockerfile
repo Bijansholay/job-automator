@@ -1,5 +1,5 @@
-# Use official Playwright Node base image (pre-bundled with Linux browser dependencies)
-FROM mcr.microsoft.com/playwright/node:v1.42.1-focal
+# Use official Playwright base image (pre-bundled with Node.js and Linux browser dependencies)
+FROM mcr.microsoft.com/playwright:v1.42.1-jammy
 
 # Set working directory
 WORKDIR /app
