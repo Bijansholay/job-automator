@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  job-craft-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: job-craft-ai
+    restart: always
+    ports:
+      - "5001:5001"
+    environment:
+      - NODE_ENV=production
+      - PORT=5001
+      - HEADLESS=true
+      - DATA_DIR=/app/server/data
+    volumes:
+      - jobcraft_data:/app/server/data
+
+volumes:
+  jobcraft_data:
+    driver: local

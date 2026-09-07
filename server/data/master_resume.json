@@ -1,0 +1,62 @@
+{
+  "personalInfo": {
+    "fullName": "Alex Morgan",
+    "email": "alex.morgan@example.com",
+    "phone": "+1 (555) 234-5678",
+    "location": "New York, NY",
+    "linkedin": "linkedin.com/in/alexmorgan",
+    "github": "github.com/alexmorgan",
+    "website": "alexmorgan.dev"
+  },
+  "summary": "Results-driven Senior Full Stack & AI Engineer with 6+ years of experience designing scalable web applications, REST APIs, and automated cloud workflows. Proven track record of optimizing performance and delivering high-impact user experiences.",
+  "skills": [
+    "JavaScript", "TypeScript", "React", "Node.js", "Express", "Python",
+    "PostgreSQL", "MongoDB", "Docker", "AWS", "REST APIs", "GraphQL",
+    "TailwindCSS", "Git", "CI/CD", "Playwright", "Web Scraping"
+  ],
+  "experience": [
+    {
+      "id": "exp-1",
+      "jobTitle": "Senior Full Stack Engineer",
+      "company": "TechScale Solutions",
+      "location": "New York, NY",
+      "startDate": "2022-03",
+      "endDate": "Present",
+      "highlights": [
+        "Architected microservices handling 2M+ daily active requests with 99.99% uptime.",
+        "Led a frontend redesign using React and Vite, reducing page load latency by 45%.",
+        "Engineered automated integration test suites with Playwright, increasing code coverage to 92%."
+      ]
+    },
+    {
+      "id": "exp-2",
+      "jobTitle": "Software Engineer",
+      "company": "Innovate Analytics",
+      "location": "Boston, MA",
+      "startDate": "2019-06",
+      "endDate": "2022-02",
+      "highlights": [
+        "Developed real-time data visualization dashboards processing live telemetry data.",
+        "Optimized database queries in PostgreSQL, reducing backend query latency by 35%.",
+        "Built automated CI/CD deployment pipelines on AWS EC2 and Docker."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "id": "edu-1",
+      "degree": "B.S. in Computer Science",
+      "institution": "Northeastern University",
+      "location": "Boston, MA",
+      "graduationYear": "2019"
+    }
+  ],
+  "projects": [
+    {
+      "id": "proj-1",
+      "title": "Automated Job Application & Resume Reformatter",
+      "description": "Built an intelligent job application assistant that tailors resumes to job descriptions and assists with auto-filling forms using Playwright.",
+      "technologies": ["Node.js", "React", "Playwright", "PDFKit"]
+    }
+  ]
+}
