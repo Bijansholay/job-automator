@@ -12,7 +12,3 @@ services:
         value: production
       - key: HEADLESS
         value: true
-    disk:
-      name: jobcraft-data
-      mountPath: /app/server/data
-      sizeGB: 1
