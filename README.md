@@ -38,6 +38,7 @@
 * **Automation**: Playwright (Chromium)
 * **Notifications**: `node-notifier`, Telegram Bot API, Discord Webhooks API
 * **AI Integration**: Google Gemini API (`@google/generativelanguage`)
+* **CI/CD**: GitHub Actions, Docker, Docker Compose
 
 ---
 
@@ -47,9 +48,14 @@
 job-automator/
 ├── Dockerfile                  # Production Docker container build
 ├── docker-compose.yml          # Local container testing & VPS deployment
-├── render.yaml                 # 1-Click Render.com deployment blueprint
+├── render.yaml                 # Render.com deployment blueprint
 ├── vite.config.js              # Vite dev server configuration & API proxy
 ├── .env.example                # Environment variables template
+├── scripts/
+│   └── deploy-aws.sh           # AWS automated setup & deployment script
+├── .github/
+│   └── workflows/
+│       └── deploy-aws-lightsail.yml # GitHub Actions automated CI/CD for AWS
 ├── server/
 │   ├── server.js               # Express API server & static build host
 │   ├── db/
@@ -107,19 +113,36 @@ Open your browser to `http://localhost:3000`.
 
 ---
 
-## ☁️ Deployment (Cloud VPS / PaaS)
+## ☁️ AWS Deployment (AWS Lightsail / EC2)
 
-### Option 1: Render.com (1-Click Blueprint)
-1. Push this repository to GitHub.
-2. Go to [Render Dashboard](https://dashboard.render.com/) -> **New** -> **Blueprint**.
-3. Select your repository. Render will automatically detect `render.yaml`, mount a 1GB persistent disk, install Playwright dependencies, and deploy the service.
+Deploying on **AWS Lightsail** or **AWS EC2** provides dedicated RAM (1GB to 2GB+) with zero memory throttling for Playwright browser automation.
 
-### Option 2: Docker / Docker Compose (Railway, DigitalOcean, AWS EC2/Lightsail)
-Run the containerized application with persistent storage volume:
+### 1. Create an AWS Lightsail or EC2 Instance
+* Log into the **AWS Management Console** -> Go to **AWS Lightsail** (or EC2).
+* Click **Create Instance** -> Choose **Ubuntu 22.04 LTS**.
+* Select the **$3.50/mo** or **$7/mo** plan (1GB - 2GB RAM).
+* Under **Networking**, open HTTP port **80** and Custom TCP port **5001**.
+
+### 2. Connect & Run Automated Deployment Script
+SSH into your AWS instance and run:
 
 ```bash
-docker-compose up -d --build
+curl -fsSL https://raw.githubusercontent.com/Bijansholay/job-automator/main/scripts/deploy-aws.sh | bash
 ```
+
+This automated script will:
+1. Install Docker, Docker Compose, and Git automatically.
+2. Clone `job-automator` repository into `/var/www/job-automator`.
+3. Build and launch the container on port `5001`.
+
+### 3. Automated CI/CD Setup with GitHub Actions (Optional)
+To deploy automatically on `git push` to `main`, add these **Secrets** in your GitHub Repo (**Settings** -> **Secrets and variables** -> **Actions**):
+
+* `LIGHTSAIL_HOST`: Your AWS Instance Public IP address (e.g. `54.123.45.67`)
+* `LIGHTSAIL_USER`: `ubuntu`
+* `LIGHTSAIL_KEY`: Your SSH Private RSA Key (`cat ~/.ssh/id_rsa` or downloaded `.pem` key file)
+
+Whenever you push code to `main`, GitHub Actions will automatically deploy to AWS!
 
 ---
 

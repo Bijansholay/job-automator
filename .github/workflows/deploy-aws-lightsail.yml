@@ -1,0 +1,33 @@
+name: Deploy to AWS Lightsail / EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to AWS Instance via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_KEY }}
+          port: 22
+          script: |
+            sudo mkdir -p /var/www/job-automator
+            sudo chown -R $USER:$USER /var/www/job-automator
+            if [ ! -d "/var/www/job-automator/.git" ]; then
+              git clone https://github.com/Bijansholay/job-automator.git /var/www/job-automator
+            fi
+            cd /var/www/job-automator
+            git fetch --all
+            git reset --hard origin/main
+            chmod +x scripts/deploy-aws.sh
+            ./scripts/deploy-aws.sh
