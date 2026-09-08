@@ -43,11 +43,26 @@ function log(msg) {
 }
 
 /**
- * Launch automated application workflow
+ * Clean up active browser session to free memory
+ */
+async function closeActiveBrowser() {
+  if (activeSession.browser) {
+    try {
+      log('Closing previous browser instance to free system RAM...');
+      await activeSession.browser.close();
+    } catch (e) {}
+    activeSession.browser = null;
+    activeSession.page = null;
+  }
+}
+
+/**
+ * Launch automated application workflow with 512MB RAM constraints
  */
 async function startApplicationWorkflow({ jobUrl, jobTitle, companyName, tailoredResume, resumePdfPath }) {
   if (activeSession.status === 'RUNNING' || activeSession.status === 'CAPTCHA_DETECTED') {
-    throw new Error('An application process is already running!');
+    // If a session is already running, clean it up before restarting
+    await closeActiveBrowser();
   }
 
   activeSession = {
@@ -61,32 +76,47 @@ async function startApplicationWorkflow({ jobUrl, jobTitle, companyName, tailore
     hasCaptchaImage: false
   };
 
-  log(`Initializing browser session for ${activeSession.jobTitle} at ${activeSession.companyName}...`);
+  log(`Initializing ultra-lean browser session for ${activeSession.jobTitle}...`);
 
   try {
     let browser;
     const wsEndpoint = process.env.BROWSER_WS_ENDPOINT;
     const isHeadless = process.env.HEADLESS === 'true' || process.env.NODE_ENV === 'production';
+    const customExecPath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined;
 
     if (wsEndpoint) {
       log(`Connecting to remote browser cluster via WebSocket (${wsEndpoint})...`);
       browser = await chromium.connectOverCDP(wsEndpoint);
     } else {
-      log(`Launching Chromium instance (headless: ${isHeadless})...`);
+      log(`Launching optimized Chromium instance (headless: ${isHeadless})...`);
       browser = await chromium.launch({
+        executablePath: customExecPath,
         headless: isHeadless,
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
           '--disable-gpu',
+          '--single-process',                  // Crucial for 512MB RAM containers
+          '--no-zygote',                        // Disable process pooling
+          '--disable-extensions',               // Disable extension overhead
+          '--disable-accelerated-2d-canvas',
+          '--disable-background-networking',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-breakpad',
+          '--disable-component-extensions-with-background-pages',
+          '--disable-ipc-flooding-protection',
+          '--disable-renderer-backgrounding',
+          '--js-flags="--max-old-space-size=128"', // Limit Chromium V8 heap to 128MB
+          '--renderer-process-limit=1',        // Force single renderer process
           '--disable-blink-features=AutomationControlled'
         ]
       });
     }
 
     const context = await browser.newContext({
-      viewport: { width: 1280, height: 800 },
+      viewport: { width: 1024, height: 768 },
       userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
     });
 
@@ -97,7 +127,7 @@ async function startApplicationWorkflow({ jobUrl, jobTitle, companyName, tailore
     log(`Navigating to job application URL...`);
     await page.goto(jobUrl, { waitUntil: 'domcontentloaded', timeout: 35000 });
 
-    // Periodically check for CAPTCHA / Verification screens
+    // Check for CAPTCHA / Verification screens
     const captchaCheckInterval = setInterval(async () => {
       if (!activeSession.page || activeSession.page.isClosed()) {
         clearInterval(captchaCheckInterval);
@@ -109,7 +139,6 @@ async function startApplicationWorkflow({ jobUrl, jobTitle, companyName, tailore
         activeSession.status = 'CAPTCHA_DETECTED';
         log(`🚨 SECURITY/CAPTCHA VERIFICATION DETECTED! Taking screenshot for UI dashboard...`);
 
-        // Capture live screenshot for remote UI dashboard viewing
         try {
           await page.screenshot({ path: CAPTCHA_IMAGE_PATH, fullPage: false });
           activeSession.hasCaptchaImage = true;
@@ -118,7 +147,6 @@ async function startApplicationWorkflow({ jobUrl, jobTitle, companyName, tailore
           console.error('[AUTOMATOR] Failed to take CAPTCHA screenshot:', e.message);
         }
 
-        // Send cross-platform notifications (Desktop & Mobile)
         await notifier.sendAlert({
           title: `Action Required: Human Verification Needed!`,
           message: `CAPTCHA or security verification encountered for ${activeSession.jobTitle} at ${activeSession.companyName}. Please complete verification.`,
@@ -126,7 +154,7 @@ async function startApplicationWorkflow({ jobUrl, jobTitle, companyName, tailore
           type: 'captcha'
         });
       }
-    }, 2000);
+    }, 2500);
 
     // Auto-fill form fields where available
     log(`Scanning application page structure...`);
@@ -170,13 +198,14 @@ async function startApplicationWorkflow({ jobUrl, jobTitle, companyName, tailore
       }
     }
 
-    log(`Form pre-filled! Monitoring session for final review / CAPTCHA resolution...`);
+    log(`Form pre-filled! Session ready.`);
 
   } catch (err) {
     log(`Error during application automation: ${err.message}`);
     if (activeSession.status !== 'CAPTCHA_DETECTED') {
       activeSession.status = 'FAILED';
     }
+    await closeActiveBrowser();
   }
 }
 
@@ -207,7 +236,6 @@ async function checkCaptchaOrVerification(page) {
       }
     }
 
-    // Check iframes for CAPTCHA elements
     const frames = page.frames();
     for (const frame of frames) {
       const frameUrl = frame.url().toLowerCase();
@@ -215,9 +243,7 @@ async function checkCaptchaOrVerification(page) {
         return true;
       }
     }
-  } catch (e) {
-    // Page might be navigating
-  }
+  } catch (e) {}
   return false;
 }
 
@@ -235,17 +261,13 @@ function resolveCaptcha() {
 }
 
 /**
- * Stop/cancel application session
+ * Stop/cancel application session and free memory
  */
 async function stopWorkflow() {
-  if (activeSession.browser) {
-    try {
-      await activeSession.browser.close();
-    } catch (e) {}
-  }
+  await closeActiveBrowser();
   activeSession.status = 'IDLE';
   activeSession.hasCaptchaImage = false;
-  log(`Workflow cancelled by user.`);
+  log(`Workflow cancelled by user. RAM freed.`);
 }
 
 module.exports = {
