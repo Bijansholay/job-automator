@@ -29,6 +29,16 @@ if ! docker compose version &> /dev/null && ! command -v docker-compose &> /dev/
   sudo apt-get update && sudo apt-get install -y docker-compose-plugin || true
 fi
 
+# Register automated daily cron cleanup daemon on AWS host machine
+echo "Registering standby daily automated cleanup daemon on AWS host..."
+sudo bash -c 'cat << "EOF" > /etc/cron.daily/jobcraft-docker-cleanup
+#!/bin/sh
+docker system prune -af --volumes >/dev/null 2>&1
+docker builder prune -af >/dev/null 2>&1
+truncate -s 0 /var/lib/docker/containers/*/*-json.log >/dev/null 2>&1
+EOF'
+sudo chmod +x /etc/cron.daily/jobcraft-docker-cleanup
+
 # Clone or pull repository
 if [ ! -d "$APP_DIR/.git" ]; then
   echo "Cloning repository to $APP_DIR..."
@@ -44,8 +54,10 @@ else
 fi
 
 # Free up disk space before Docker build
-echo "Pruning unused Docker build cache & dangling images to free disk space..."
+echo "Pruning Docker system, buildkit cache & container logs to free disk space..."
 sudo docker system prune -af --volumes || true
+sudo docker builder prune -af || true
+sudo truncate -s 0 /var/lib/docker/containers/*/*-json.log 2>/dev/null || true
 
 # Build and start container
 echo "Building and launching Docker containers..."

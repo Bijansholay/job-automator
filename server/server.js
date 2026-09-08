@@ -8,6 +8,7 @@ const resumeTailor = require('./modules/resumeTailor');
 const pdfGenerator = require('./modules/pdfGenerator');
 const notifier = require('./modules/notifier');
 const automator = require('./modules/automator');
+const cleanupDaemon = require('./modules/cleanupDaemon');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -120,7 +121,6 @@ app.post('/api/automate/start', async (req, res) => {
   }
 
   try {
-    // Fire and forget application workflow in background
     automator.startApplicationWorkflow({
       jobUrl,
       jobTitle,
@@ -158,4 +158,7 @@ app.listen(PORT, () => {
   console.log(`=================================================`);
   console.log(`🚀 JobCraft AI API Server listening on port ${PORT}`);
   console.log(`=================================================`);
+  
+  // Launch standby automated cleanup daemon
+  cleanupDaemon.startCleanupDaemon();
 });
