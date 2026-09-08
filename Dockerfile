@@ -1,5 +1,5 @@
-# Use official Playwright base image (pre-bundled with Node.js, Linux dependencies & Chromium)
-FROM mcr.microsoft.com/playwright:v1.42.1-jammy
+# Use official Playwright base image matching locked npm version (1.62.1)
+FROM mcr.microsoft.com/playwright:v1.62.1-jammy
 
 # Set working directory
 WORKDIR /app
